@@ -1,5 +1,5 @@
 
-SUBDIRS = libdpx tools
+SUBDIRS = libcineon tools
 
 ACLOCAL_AMFLAGS = -I m4
 
