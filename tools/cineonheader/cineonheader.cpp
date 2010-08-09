@@ -5,7 +5,7 @@
  * Copyright (c) 2009, Patrick Palmer.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  *   - Redistributions of source code must retain the above copyright notice,
@@ -19,16 +19,16 @@
  *     contributors may be used to endorse or promote products derived from
  *     this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -38,11 +38,11 @@
 #include <string>
 
 
-#include "DPX.h"
+#include "Cineon.h"
 
 
 using namespace std;
-using namespace dpx;
+using namespace cineon;
 
 
 
@@ -106,7 +106,7 @@ void Output(const string t, const string v, const bool xml)
 {
 	if (sub)
 		cout << "  ";
-			
+
 	if (xml)
 	{
 		cout << "  <" << XmlTag(t) << ">" << v << "</" << XmlTag(t) << ">" << endl;
@@ -140,10 +140,10 @@ void StrOutput(const string t, const string v, const int len, const bool xml)
 	char buf[256];
 	::strncpy(buf, v.c_str(), len);
 	buf[len] = '\0';
-	
+
 	if (sub)
 		cout << "  ";
-			
+
 	if (xml)
 	{
 		cout << "  <" << XmlTag(t) << ">" << buf << "</" << XmlTag(t) << ">" << endl;
@@ -206,13 +206,13 @@ string Display(R32 d)
 		ostringstream o;
 		o << d;
 		return o.str();
-	}	
+	}
 }
 
 string DisplayOrientation(U32 o)
 {
 	string s;
-	
+
 	switch (o)
 	{
 	case kLeftToRightTopToBottom:
@@ -220,7 +220,7 @@ string DisplayOrientation(U32 o)
 		break;
 	case kRightToLeftTopToBottom:
 		s = "Right to Left Top To Bottom";
-		break;		
+		break;
 	case kLeftToRightBottomToTop:
 		s = "Left to Right Bottom To Top";
 		break;
@@ -253,7 +253,7 @@ string DisplayOrientation(U32 o)
 string DisplayPacking(U8 p)
 {
 	string s;
-	
+
 	switch (p)
 	{
 	case kPacked:
@@ -268,17 +268,17 @@ string DisplayPacking(U8 p)
 	default:
 		s = "Unknown " + Display(p);
 	}
-	
+
 	return s;
 }
-	
-	
-	
-	
+
+
+
+
 string DisplayDescriptor(U8 d)
 {
 	string s;
-	
+
 	switch (d)
 	{
 	case kUserDefinedDescriptor:
@@ -357,15 +357,15 @@ string DisplayDescriptor(U8 d)
 		s = "Unknown " + Display(d);
 		break;
 	}
-	
+
 	return s;
 }
 
 
-string DisplayCharacteristic(U8 c) 
+string DisplayCharacteristic(U8 c)
 {
 	string s;
-	
+
 	switch (c)
 	{
 	case kUserDefined:
@@ -414,7 +414,7 @@ string DisplayCharacteristic(U8 c)
 		s = "Unknown " + Display(c);
 		break;
 	}
-	
+
 	return s;
 }
 
@@ -422,7 +422,7 @@ string DisplayCharacteristic(U8 c)
 string DisplayVideoSignal(U8 v)
 {
 	string s;
-	
+
 	switch (v)
 	{
 	case kUndefined:
@@ -463,7 +463,7 @@ string DisplayVideoSignal(U8 v)
 		break;
 	case k1125LineInterlace169AR_240:
 		s = "1125 Line Interlace 16:9";
-		break;		
+		break;
 	case k525LineProgressive169AR:
 		s = "525 Line Progressive 16:9";
 		break;
@@ -480,7 +480,7 @@ string DisplayVideoSignal(U8 v)
 		s = "Unknown " + Display(v);
 		break;
 	}
-	
+
 	return s;
 }
 
@@ -492,7 +492,7 @@ int main(int argc, char **argv)
 	bool xmlDeclaration = false;
 	int findx = 1;
 	char buf[24];
-		
+
 	// check argument count
 	if (argc == 3)
 	{
@@ -527,15 +527,15 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	dpx::Header header;
-	
+	cineon::Header header;
+
 	if (!header.Read(&img))
 	{
 		cout << "Unable to read header" << endl;
 		return 1;
 	}
 
-		
+
 	// display header info
 	if (xml)
 	{
@@ -543,11 +543,11 @@ int main(int argc, char **argv)
 			cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" << endl;
 		cout << "<dpx>" << endl;
 	}
-	
+
 	char str[201];
 	header.Version(str);
 	StrOutput("Version",str, 8, xml);
-	
+
 	::sprintf(buf, "%x", header.MagicNumber());
 	StrOutput("Magic Number", buf, 8, xml);
 	StrOutput("Endian Swap", (header.RequiresByteSwap() ? "true" : "false"), 6, xml);
@@ -574,7 +574,7 @@ int main(int argc, char **argv)
 	Output("Number of Elements", header.NumberOfElements(), xml);
 	Output("Width", Display(header.PixelsPerLine()), xml);
 	Output("Height", Display(header.LinesPerElement()), xml);
-			
+
 	for (int i = 0; i < header.numberOfElements; i++)
 	{
 		StartSub("Image Element", (i+1), xml);
@@ -585,7 +585,7 @@ int main(int argc, char **argv)
 		Output("High Quantity", Display(header.chan[i].highQuantity), xml);
 		Output("Descriptor", DisplayDescriptor(header.ImageDescriptor(i)), xml);
 		Output("Transfer", DisplayCharacteristic(header.Transfer(i)), xml);
-		Output("Colorimetric", DisplayCharacteristic(header.Colorimetric(i)), xml);		
+		Output("Colorimetric", DisplayCharacteristic(header.Colorimetric(i)), xml);
 		Output("Bit Size", Display(header.BitDepth(i)), xml);
 		Output("Packing", DisplayPacking(header.ImagePacking(i)), xml);
 		Output("Encoding", (header.ImageEncoding(i) ? "true" : "false"), xml);
@@ -615,11 +615,11 @@ int main(int argc, char **argv)
 	Output("XL", Display(header.Border(0)), xml);
 	Output("XR", Display(header.Border(1)), xml);
 	Output("YT", Display(header.Border(2)), xml);
-	Output("YB", Display(header.Border(3)), xml);	
+	Output("YB", Display(header.Border(3)), xml);
 	EndSub("Border", xml);
 	StartSub("Aspect Ratio", -1, xml);
 	Output("Horizontal", Display(header.AspectRatio(0)), xml);
-	Output("Vertical", Display(header.AspectRatio(1)), xml);	
+	Output("Vertical", Display(header.AspectRatio(1)), xml);
 	EndSub("Aspect Ratio", xml);
 	Output("X Scanned Size", Display(header.XScannedSize()), xml);
 	Output("Y Scanned Size", Display(header.YScannedSize()), xml);
@@ -657,10 +657,10 @@ int main(int argc, char **argv)
 	Output("Break Point", Display(header.BreakPoint()), xml);
 	Output("White Point", Display(header.WhiteLevel()), xml);
 	Output("Integration Times", Display(header.IntegrationTimes()), xml);
-	
+
 	if (xml)
 		cout << "</dpx>" << endl;
-		
+
 	return 0;
 }
 
