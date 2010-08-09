@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([OpenDPX], 0.5.0)
+AC_INIT([libcineon], 0.1)
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -37,13 +37,13 @@ AC_CHECK_FUNCS([memset])
 
 AC_OUTPUT([
 Makefile
-libdpx/Makefile
+libcineon/Makefile
 tools/Makefile
-tools/dpxheader/Makefile
-tools/dpx2tiff/Makefile
+tools/cineonheader/Makefile
+tools/cineon2tiff/Makefile
 ])
 
 
-AC_MSG_RESULT([OpenDPX: build libtiff apps... "$have_libtiff"])
+AC_MSG_RESULT([libcineon: build libtiff apps... "$have_libtiff"])
 
 
