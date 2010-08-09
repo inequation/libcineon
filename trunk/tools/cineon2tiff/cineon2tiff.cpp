@@ -5,7 +5,7 @@
  * Copyright (c) 2009, Patrick Palmer.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  *   - Redistributions of source code must retain the above copyright notice,
@@ -19,16 +19,16 @@
  *     contributors may be used to endorse or promote products derived from
  *     this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -38,12 +38,12 @@
 #include <string>
 
 
-#include "DPX.h"
+#include "Cineon.h"
 #include "tiffio.h"
 
 
 using namespace std;
-using namespace dpx;
+using namespace cineon;
 
 
 
@@ -52,14 +52,14 @@ void Usage()
 	cout << "usage: dpx2tiff [-8] file.dpx file.tif" << endl;
 }
 
-   
+
 
 int main(int argc, char **argv)
 {
 	int offset = 1;
 	bool write8bit = false;
 	//bool write8bit = true;
-	
+
 	if (argc == 4 && strcmp(argv[1], "-8") == 0)
 	{
 		write8bit = true;
@@ -78,15 +78,15 @@ int main(int argc, char **argv)
 		cout << "Unable to open file " << argv[1] << endl;
 		return 1;
 	}
-	
-	dpx::Reader dpx;
+
+	cineon::Reader dpx;
 	dpx.SetInStream(&img);
 	if (!dpx.ReadHeader())
 	{
 		cout << "Unable to read header" << endl;
 		return 2;
 	}
-	
+
 	TIFF *out;
 	out = TIFFOpen(argv[offset+1], "w");
 	if (out == NULL)
@@ -96,18 +96,18 @@ int main(int argc, char **argv)
 	}
 
 	// data size, override if user specifies
-	dpx::DataSize size = dpx.header.ComponentDataSize(0);
+	cineon::DataSize size = dpx.header.ComponentDataSize(0);
 	int nob = dpx.header.ComponentByteCount(0);
 	if (write8bit)
 	{
-		size = dpx::kByte;
+		size = cineon::kByte;
 		nob = 1;
 	}
 
-	cout << "Image Width " << dpx.header.Width() << " Height " << 
-			dpx.header.Height() << " component byte count " << 
+	cout << "Image Width " << dpx.header.Width() << " Height " <<
+			dpx.header.Height() << " component byte count " <<
 			dpx.header.ComponentByteCount(0) << endl;
-	
+
 	// conversion
 	int format = PHOTOMETRIC_RGB;
 	int elementCount = 3;
@@ -131,9 +131,9 @@ int main(int argc, char **argv)
 	else
 		max = 0xffffffff;
 	TIFFSetField(out, TIFFTAG_MAXSAMPLEVALUE, max);
-	
+
 	tdata_t buf = _TIFFmalloc(TIFFScanlineSize(out));
-	if (buf == NULL) 
+	if (buf == NULL)
 	{
 		cout << "memory allocation error" << endl;
 		return 4;
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
 	{
 		block.y1 = y;
 		block.y2 = y;
-			
+
 		if (dpx.ReadBlock(buf, size, block, dpx.header.ImageDescriptor(0)) == false)
 		{
 			cout << "unable to read line " << y << " with component data size " << size << endl;
@@ -161,10 +161,10 @@ int main(int argc, char **argv)
 
 
 	_TIFFfree(buf);
-	
+
 	img.Close();
 	TIFFClose(out);
-	
+
 	return 0;
 }
 
