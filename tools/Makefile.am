@@ -1,8 +1,8 @@
 
-SUBDIRS = dpxheader
+SUBDIRS = cineonheader
 
 if HAVE_LIBTIFF
-SUBDIRS += dpx2tiff
+SUBDIRS += cineon2tiff
 endif
 
 

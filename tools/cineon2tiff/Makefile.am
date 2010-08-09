@@ -1,10 +1,10 @@
 
-LIBDPX = $(top_builddir)/libdpx/libdpx.a
+LIBCINEON = $(top_builddir)/libcineon/libcineon.a
 
-INCLUDES = -I$(top_builddir)/libdpx
+INCLUDES = -I$(top_builddir)/libcineon
 
-bin_PROGRAMS = dpx2tiff
+bin_PROGRAMS = cineon2tiff
 
-dpx2tiff_SOURCES = dpx2tiff.cpp
-dpx2tiff_LDADD = $(LIBDPX) -ltiff
+cineon2tiff_SOURCES = cineon2tiff.cpp
+cineon2tiff_LDADD = $(LIBCINEON) -ltiff
 
