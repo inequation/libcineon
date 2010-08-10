@@ -8,7 +8,6 @@ libcineon_a_SOURCES = Codec.cpp \
                    InStream.cpp \
                    OutStream.cpp \
                    Reader.cpp \
-                   RunLengthEncoding.cpp \
 				   TestFunc.cpp \
                    Writer.cpp
 
@@ -17,7 +16,6 @@ noinst_HEADERS = BaseTypeConverter.h \
 				 ElementReadStream.h \
 				 EndianSwap.h \
 				 ReaderInternal.h \
-				 RunLengthEncoding.h \
 				 TestFunc.h \
 				 WriterInternal.h
 

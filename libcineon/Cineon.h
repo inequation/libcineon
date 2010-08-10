@@ -226,21 +226,6 @@ namespace cineon
 		bool ReadImage(const int element, void *data);
 
 		/*!
-		 * \brief Read an image element into a buffer that matches the image description type
-		 *
-		 * The DataSize allows the user to specific the buffer DataSize which can differ
-		 * from the image element.  It is possible, for example, to read an 8-bit per
-		 * component (3 components per pixel for RGB) into 16-bits.
-		 *
-		 * \param data buffer
-		 * \param size size of the buffer component
-		 * \param desc element description type
-		 * \return success true/false
-		 */
-		bool ReadImage(void *data, const DataSize size = kWord,
-			const Descriptor desc = kRGB);
-
-		/*!
 		 * \brief Read a rectangular image block into a buffer from the specified image element
 		 *
 		 * \param element element (0-7)
@@ -249,19 +234,6 @@ namespace cineon
 		 * \return success true/false
 		 */
 		bool ReadBlock(const int element, unsigned char *data, Block &block);
-
-		/*!
-		 * \brief Read a rectangular image block into a buffer from the image element
-		 * specified by the Descriptor type
-		 *
-		 * \param data buffer
-		 * \param size size of the buffer component
-		 * \param block image area to read
-		 * \param desc element description type
-		 * \return success true/false
-		 */
-		bool ReadBlock(void *data, const DataSize size, Block &block,
-			const Descriptor desc = kRGB);
 
 		/*!
 		 * \brief Read the user data into a buffer.
@@ -333,8 +305,8 @@ namespace cineon
 		 * \param copyright copyright statement (200 characters max)
 		 * \param encryptKey encryption key
 		 */
-		void SetFileInfo(const char *fileName, const char *creationTimeDate = 0, const char *creator = 0,
-			const char *project = 0, const char *copyright = 0, const U32 encryptKey = ~0);
+		void SetFileInfo(const char *fileName, const char *creationDate = 0,
+			const char *creationTime = 0);
 
 		/*!
 		 * \brief Set the Width and Height of the images
@@ -372,16 +344,12 @@ namespace cineon
 		 * \param eoimPadding end of image padding (in bytes)
 		 */
 		void SetElement(const int element = 0,
-			const Descriptor desc = kRGB,
+			const Descriptor desc = kGrayscale,
 			const U8 bitDepth = 10,
-			const Characteristic transfer = kLogarithmic,
-			const Characteristic colorimetric = kLogarithmic,
-			const Packing packing = kFilledMethodA,
-			const Encoding encoding = kNone,
-			const U32 dataSign = 0,
-			const U32 lowData = ~0, const R32 lowQuantity = ~0,
-			const U32 highData = ~0, const R32 highQuantity = ~0,
-			const U32 eolnPadding = 0, const U32 eoimPadding = 0);
+			const U32 pixelsPerLine = 1,
+			const U32 linesPerElement = 1,
+			const R32 lowData = ~0, const R32 lowQuantity = ~0,
+			const R32 highData = ~0, const R32 highQuantity = ~0);
 
 		/*!
 		 * \brief Set the OutStream object will use to write the files

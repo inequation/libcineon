@@ -35,14 +35,13 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <cassert>
 
 #include "Cineon.h"
 #include "EndianSwap.h"
 #include "ReaderInternal.h"
 #include "ElementReadStream.h"
 #include "Codec.h"
-#include "RunLengthEncoding.h"
-
 
 
 cineon::Reader::Reader() : fd(0), rio(0)
@@ -103,15 +102,17 @@ bool cineon::Reader::ReadImage(const int element, void *data)
 	if (this->header.ImageDescriptor(element) == kUndefinedDescriptor)
 		return false;
 
-	return this->ReadImage(data, this->header.ComponentDataSize(element), this->header.ImageDescriptor(element));
+	assert(!"FIXME");
+	return false;
+	//return this->ReadImage(data, this->header.ComponentDataSize(element), this->header.ImageDescriptor(element));
 }
 
 
-bool cineon::Reader::ReadImage(void *data, const DataSize size, const Descriptor desc)
+/*bool cineon::Reader::ReadImage(void *data, const DataSize size, const Descriptor desc)
 {
 	Block block(0, 0, this->header.Width()-1, this->header.Height()-1);
 	return this->ReadBlock(data, size, block, desc);
-}
+}*/
 
 
 
@@ -131,7 +132,9 @@ bool cineon::Reader::ReadBlock(const int element, unsigned char *data, Block &bl
 	if (this->header.ImageDescriptor(element) == kUndefinedDescriptor)
 		return false;
 
-	return this->ReadBlock(data, this->header.ComponentDataSize(element), block, this->header.ImageDescriptor(element));
+	assert(!"FIXME");
+	return false;
+	//return this->ReadBlock(data, this->header.ComponentDataSize(element), block, this->header.ImageDescriptor(element));
 }
 
 
@@ -145,7 +148,7 @@ bool cineon::Reader::ReadBlock(const int element, unsigned char *data, Block &bl
 
 */
 
-bool cineon::Reader::ReadBlock(void *data, const DataSize size, Block &block, const Descriptor desc)
+/*bool cineon::Reader::ReadBlock(void *data, const DataSize size, Block &block, const Descriptor desc)
 {
 	int i;
 	int element;
@@ -218,7 +221,7 @@ bool cineon::Reader::ReadBlock(void *data, const DataSize size, Block &block, co
 
 	// read the image block
 	return this->codex[element]->Read(this->header, this->rio, element, block, data, size);
-}
+}*/
 
 
 

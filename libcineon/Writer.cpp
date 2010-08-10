@@ -57,38 +57,24 @@ void cineon::Writer::Start()
 }
 
 
-void cineon::Writer::SetFileInfo(const char *fileName, const char *creationTimeDate, const char *creator,
-			const char *project, const char *copyright, const U32 encryptKey)
+void cineon::Writer::SetFileInfo(const char *fileName, const char *creationDate, const char *creationTime)
 {
 	if (fileName)
 		this->header.SetFileName(fileName);
 
-	if (creationTimeDate)
-		this->header.SetCreationTimeDate(creationTimeDate);
-	else
-	{
+	if (creationDate && creationTime) {
+		this->header.SetCreationDate(creationDate);
+		this->header.SetCreationTime(creationTime);
+	} else {
 		time_t seconds = time(0);
 		this->header.SetCreationTimeDate(seconds);
 	}
-
-	if (creator)
-		this->header.SetCreator(creator);
-	else
-		this->header.SetCreator("OpenDPX library");
-
-	if (project)
-		this->header.SetProject(project);
-	if (copyright)
-		this->header.SetCopyright(copyright);
-	this->header.SetEncryptKey(encryptKey);
 }
 
 
 void cineon::Writer::SetImageInfo(const U32 width, const U32 height)
 {
 	this->header.SetImageOrientation(kLeftToRightTopToBottom);
-	this->header.SetPixelsPerLine(width);
-	this->header.SetLinesPerElement(height);
 }
 
 
@@ -143,30 +129,22 @@ bool cineon::Writer::WriteUserData(void *data)
 
 
 void cineon::Writer::SetElement(const int num, const Descriptor desc, const U8 bitDepth,
-			const Characteristic transfer, const Characteristic colorimetric,
-			const Packing packing, const Encoding encoding, const U32 dataSign,
-			const U32 lowData, const R32 lowQuantity,
-			const U32 highData, const R32 highQuantity,
-			const U32 eolnPadding, const U32 eoimPadding)
+			const U32 pixelsPerLine,
+			const U32 linesPerElement,
+			const R32 lowData, const R32 lowQuantity,
+			const R32 highData, const R32 highQuantity)
 {
 	// make sure the range is good
 	if (num < 0 || num >= MAX_ELEMENTS)
 		return;
 
 	// set values
-	this->header.SetDataSign(num, dataSign);
 	this->header.SetLowData(num, lowData);
 	this->header.SetLowQuantity(num, lowQuantity);
 	this->header.SetHighData(num, highData);
 	this->header.SetHighQuantity(num, highQuantity);
 	this->header.SetImageDescriptor(num, desc);
-	this->header.SetTransfer(num, transfer);
-	this->header.SetColorimetric(num, colorimetric);
 	this->header.SetBitDepth(num, bitDepth);
-	this->header.SetImagePacking(num, packing);
-	this->header.SetImageEncoding(num, encoding);
-	this->header.SetEndOfLinePadding(num, eolnPadding);
-	this->header.SetEndOfImagePadding(num, eoimPadding);
 
 	// determine if increases element count
 	this->header.CalculateNumberOfElements();
@@ -186,7 +164,7 @@ bool cineon::Writer::WriteElement(const int element, void *data, const long coun
 		return false;
 
 	// update file ptr
-	this->header.SetDataOffset(element, this->fileLoc);
+	//this->header.SetDataOffset(element, this->fileLoc);
 	this->fileLoc += count;
 
 	// write
@@ -225,22 +203,19 @@ bool cineon::Writer::WriteElement(const int element, void *data, const DataSize 
 	// mark location in headers
 	if (element == 0)
 		this->header.SetImageOffset(this->fileLoc);
-	this->header.SetDataOffset(element, this->fileLoc);
+	//this->header.SetDataOffset(element, this->fileLoc);
 
 	// reverse the order of the components
 	bool reverse = false;
 
-	// rle encoding?
-	const bool rle = this->header.ImageEncoding(element) == kRLE;
-
 	// image parameters
-	const U32 eolnPad = this->header.EndOfLinePadding(element);
-	const U32 eoimPad = this->header.EndOfImagePadding(element);
+	const U32 eolnPad = this->header.EndOfLinePadding();
+	const U32 eoimPad = this->header.EndOfImagePadding();
 	const U8 bitDepth = this->header.BitDepth(element);
-	const U32 width = this->header.Width();
-	const U32 height = this->header.Height();
+	const U32 width = this->header.Width(element);
+	const U32 height = this->header.Height(element);
 	const int noc = this->header.ImageElementComponentCount(element);
-	const Packing packing = this->header.ImagePacking(element);
+	const Packing packing = this->header.ImagePacking();
 
 	// check width & height, just in case
 	if (width == 0 || height == 0)
@@ -259,12 +234,11 @@ bool cineon::Writer::WriteElement(const int element, void *data, const DataSize 
 	}
 
 	// can we write the entire memory chunk at once without any additional processing
-	if (!rle  &&
-		((bitDepth == 8 && size == cineon::kByte) ||
-		 (bitDepth == 12 && size == cineon::kWord && packing == kFilledMethodA) ||
+	if ((bitDepth == 8 && size == cineon::kByte) ||
+		 (bitDepth == 12 && size == cineon::kWord /*&& packing == kFilledMethodA*/) ||
 		 (bitDepth == 16 && size == cineon::kWord) ||
 		 (bitDepth == 32 && size == cineon::kFloat) ||
-		 (bitDepth == 64 && size == cineon::kDouble)))
+		 (bitDepth == 64 && size == cineon::kDouble))
 	{
 		status = this->WriteThrough(data, width, height, noc, bytes, eolnPad, eoimPad, blank);
 		if (blank)
@@ -277,48 +251,48 @@ bool cineon::Writer::WriteElement(const int element, void *data, const DataSize 
 		{
 		case 8:
 			if (size == cineon::kByte)
-				this->fileLoc += WriteBuffer<U8, 8, true>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U8, 8, true>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			else
-				this->fileLoc += WriteBuffer<U8, 8, false>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U8, 8, false>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			break;
 
 		case 10:
 			// are the channels stored in reverse
-			if (this->header.ImageDescriptor(element) == kRGB && this->header.DatumSwap(element) && bitDepth == 10)
-				reverse = true;
+			/*if (this->header.ImageDescriptor(element) == kRGB && this->header.DatumSwap(element) && bitDepth == 10)
+				reverse = true;*/
 
 			if (size == cineon::kWord)
-				this->fileLoc += WriteBuffer<U16, 10, true>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U16, 10, true>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			else
-				this->fileLoc += WriteBuffer<U16, 10, false>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U16, 10, false>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			break;
 
 		case 12:
 			if (size == cineon::kWord)
-				this->fileLoc += WriteBuffer<U16, 12, true>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U16, 12, true>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			else
-				this->fileLoc += WriteBuffer<U16, 12, false>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U16, 12, false>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			break;
 
 		case 16:
 			if (size == cineon::kWord)
-				this->fileLoc += WriteBuffer<U16, 16, true>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U16, 16, true>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			else
-				this->fileLoc += WriteBuffer<U16, 16, false>(this->fd, size, data, width, height, noc, packing, rle, reverse, eolnPad, blank, status);
+				this->fileLoc += WriteBuffer<U16, 16, false>(this->fd, size, data, width, height, noc, packing, reverse, eolnPad, blank, status);
 			break;
 
 		case 32:
 			if (size == cineon::kFloat)
-				this->fileLoc += WriteFloatBuffer<R32, 32, true>(this->fd, size, data, width, height, noc, packing, rle, eolnPad, blank, status);
+				this->fileLoc += WriteFloatBuffer<R32, 32, true>(this->fd, size, data, width, height, noc, packing, eolnPad, blank, status);
 			else
-				this->fileLoc += WriteFloatBuffer<R32, 32, false>(this->fd, size, data, width, height, noc, packing, rle, eolnPad, blank, status);
+				this->fileLoc += WriteFloatBuffer<R32, 32, false>(this->fd, size, data, width, height, noc, packing, eolnPad, blank, status);
 			break;
 
 		case 64:
 			if (size == cineon::kDouble)
-				this->fileLoc += WriteFloatBuffer<R64, 64, true>(this->fd, size, data, width, height, noc, packing, rle, eolnPad, blank, status);
+				this->fileLoc += WriteFloatBuffer<R64, 64, true>(this->fd, size, data, width, height, noc, packing, eolnPad, blank, status);
 			else
-				this->fileLoc += WriteFloatBuffer<R64, 64, false>(this->fd, size, data, width, height, noc, packing, rle, eolnPad, blank, status);
+				this->fileLoc += WriteFloatBuffer<R64, 64, false>(this->fd, size, data, width, height, noc, packing, eolnPad, blank, status);
 			break;
 		}
 	}
