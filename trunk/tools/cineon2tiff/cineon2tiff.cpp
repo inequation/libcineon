@@ -2,7 +2,7 @@
 // vi: ts=4
 
 /*
- * Copyright (c) 2009, Patrick Palmer.
+ * Copyright (c) 2010, Patrick Palmer and Leszek Godlewski.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ using namespace cineon;
 
 void Usage()
 {
-	cout << "usage: dpx2tiff [-8] file.dpx file.tif" << endl;
+	cout << "usage: cineon2tiff [-8] file.cin file.tif" << endl;
 }
 
 

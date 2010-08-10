@@ -193,7 +193,7 @@ namespace cineon
 		const U32 bitmask = 0x03ff;
 
 		// shift bits over 2 if Method A
-		const int method_shift = (METHOD == kFilledMethodA ? 2 : 0);
+		const int method_shift = 0;//(METHOD == kFilledMethodA ? 2 : 0);
 
 		// loop through the buffer
 		int i;
@@ -235,15 +235,9 @@ namespace cineon
 
 	template <typename IB, int BITDEPTH, bool SAMEBUFTYPE>
 	int WriteBuffer(OutStream *fd, DataSize src_size, void *src_buf, const U32 width, const U32 height, const int noc, const Packing packing,
-					const bool rle, const bool reverse, const int eolnPad, char *blank, bool &status)
+					const bool reverse, const int eolnPad, char *blank, bool &status)
 	{
 		int fileOffset = 0;
-
-		// determine any impact on the max line size due to RLE
-		// impact may be that rle is true but the data can not be compressed at all
-		// the worst possible compression with RLE is increasing the image size by 1/3
-		// so we will just double the destination size if RLE
-		int rleBufAdd = (rle ? ((width * noc / 3) + 1) : 0);
 
 		// buffer access parameters
 		BufferAccess bufaccess;
@@ -252,7 +246,7 @@ namespace cineon
 
 		// allocate one line
 		IB *src;
-		IB *dst = new IB[(width * noc) + 1 + rleBufAdd];
+		IB *dst = new IB[(width * noc) + 1];
 
 		// each line in the buffer
 		for (U32 h = 0; h < height; h++)
@@ -271,13 +265,6 @@ namespace cineon
 				// not a copy, access source
 				src = reinterpret_cast<IB*>(imageBuf + (h * width * noc * bytes) + (h*eolnPad));
 
-			// if rle, compress
-			if (rle)
-			{
-				RleCompress<IB, BITDEPTH>(src, dst, ((width * noc) + rleBufAdd), width * noc, bufaccess);
-				src = dst;
-			}
-
 			// if 10 or 12 bit, pack
 			if (BITDEPTH == 10)
 			{
@@ -285,14 +272,14 @@ namespace cineon
 				{
 					WritePackedMethod<IB, BITDEPTH>(src, dst, (width*noc), reverse, bufaccess);
 				}
-				else if (packing == kFilledMethodA)
+				/*else if (packing == kFilledMethodA)
 				{
 					WritePackedMethodAB_10bit<IB, cineon::kFilledMethodA>(src, dst, (width*noc), reverse, bufaccess);
 				}
 				else // if (packing == cineon::kFilledMethodB)
 				{
 					WritePackedMethodAB_10bit<IB, cineon::kFilledMethodB>(src, dst, (width*noc), reverse, bufaccess);
-				}
+				}*/
 			}
 			else if (BITDEPTH == 12)
 			{
@@ -300,13 +287,13 @@ namespace cineon
 				{
 					WritePackedMethod<IB, BITDEPTH>(src, dst, (width*noc), reverse, bufaccess);
 				}
-				else if (packing == cineon::kFilledMethodB)
+				/*else if (packing == cineon::kFilledMethodB)
 				{
 					// shift 4 MSB down, so 0x0f00 would become 0x00f0
 					for (int w = 0; w < bufaccess.length; w++)
 						dst[w] = src[bufaccess.offset+w] >> 4;
 					bufaccess.offset = 0;
-				}
+				}*/
 				// a bitdepth of 12 by default is packed with cineon::kFilledMethodA
 				// assumes that either a copy or rle was required
 				// otherwise this routine should not be called with:
@@ -343,15 +330,9 @@ namespace cineon
 
 	template <typename IB, int BITDEPTH, bool SAMEBUFTYPE>
 	int WriteFloatBuffer(OutStream *fd, DataSize src_size, void *src_buf, const U32 width, const U32 height, const int noc, const Packing packing,
-					const bool rle, const int eolnPad, char *blank, bool &status)
+					const int eolnPad, char *blank, bool &status)
 	{
 		int fileOffset = 0;
-
-		// determine any impact on the max line size due to RLE
-		// impact may be that rle is true but the data can not be compressed at all
-		// the worst possible compression with RLE is increasing the image size by 1/3
-		// so we will just double the destination size if RLE
-		int rleBufAdd = (rle ? ((width * noc / 3) + 1) : 0);
 
 		// buffer access parameters
 		BufferAccess bufaccess;
@@ -360,7 +341,7 @@ namespace cineon
 
 		// allocate one line
 		IB *src;
-		IB *dst = new IB[(width * noc) + rleBufAdd];
+		IB *dst = new IB[(width * noc)];
 
 		// each line in the buffer
 		for (U32 h = 0; h < height; h++)
@@ -378,13 +359,6 @@ namespace cineon
 			else
 				// not a copy, access source
 				src = reinterpret_cast<IB*>(imageBuf + (h * width * noc * bytes) + (h*eolnPad));
-
-			// if rle, compress
-			if (rle)
-			{
-				RleCompress<IB, BITDEPTH>(src, dst, ((width * noc) + rleBufAdd), width * noc, bufaccess);
-				src = dst;
-			}
 
 			// write line
 			fileOffset += (bufaccess.length * sizeof(IB));

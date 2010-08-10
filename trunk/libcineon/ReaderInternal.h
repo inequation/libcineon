@@ -125,7 +125,7 @@ namespace cineon
 		const int numberOfComponents = dpxHeader.ImageElementComponentCount(element);
 
 		// end of line padding
-		int eolnPad = dpxHeader.EndOfLinePadding(element);
+		int eolnPad = dpxHeader.EndOfLinePadding();
 
 
 		// read in each line at a time directly into the user memory space
@@ -134,7 +134,7 @@ namespace cineon
 			// determine offset into image element
 
 			// first get line offset
-			long offset = (line + block.y1) * dpxHeader.Width() * numberOfComponents;
+			long offset = (line + block.y1) * dpxHeader.Width(element) * numberOfComponents;
 			offset += offset % 3;
 			offset = offset / 3 * 4;
 
@@ -151,7 +151,7 @@ namespace cineon
 			readSize = readSize / 3 * 4;
 
 			// determine buffer offset
-			int bufoff = line * dpxHeader.Width() * numberOfComponents;
+			int bufoff = line * dpxHeader.Width(element) * numberOfComponents;
 
 			fd->Read(dpxHeader, element, offset, readBuf, readSize);
 
@@ -242,13 +242,13 @@ namespace cineon
 		const int numberOfComponents = dpxHeader.ImageElementComponentCount(element);
 
 		// end of line padding
-		int eolnPad = dpxHeader.EndOfLinePadding(element);
+		int eolnPad = dpxHeader.EndOfLinePadding();
 
 		// data size in bits
 		const int dataSize = dpxHeader.BitDepth(element);
 
 		// number of bytes
-		const int lineSize = (dpxHeader.Width() * numberOfComponents * dataSize + 31) / 32;
+		const int lineSize = (dpxHeader.Width(element) * numberOfComponents * dataSize + 31) / 32;
 
 		// read in each line at a time directly into the user memory space
 		for (int line = 0; line < height; line++)
@@ -263,7 +263,7 @@ namespace cineon
 			readSize = ((readSize + 31) / 32) * sizeof(U32);
 
 			// calculate buffer offset
-			int bufoff = line * dpxHeader.Width() * numberOfComponents;
+			int bufoff = line * dpxHeader.Width(element) * numberOfComponents;
 
 			fd->Read(dpxHeader, element, offset, readBuf, readSize);
 
@@ -304,12 +304,12 @@ namespace cineon
 		const int height = block.y2 - block.y1 + 1;
 
 		// end of line padding
-		int eolnPad = dpxHeader.EndOfLinePadding(element);
+		int eolnPad = dpxHeader.EndOfLinePadding();
 		if (eolnPad == ~0)
 			eolnPad = 0;
 
 		// image width
-		const int imageWidth = dpxHeader.Width();
+		const int imageWidth = dpxHeader.Width(element);
 
 		// read in each line at a time directly into the user memory space
 		for (int line = 0; line < height; line++)
@@ -349,10 +349,10 @@ namespace cineon
 		const int height = block.y2 - block.y1 + 1;
 
 		// width of image
-		const int imageWidth = dpxHeader.Width();
+		const int imageWidth = dpxHeader.Width(element);
 
 		// end of line padding (not a required data element so check for ~0)
-		int eolnPad = dpxHeader.EndOfLinePadding(element);
+		int eolnPad = dpxHeader.EndOfLinePadding();
 		if (eolnPad == ~0)
 			eolnPad = 0;
 
@@ -410,31 +410,31 @@ namespace cineon
 	{
 		const int bitDepth = dpxHeader.BitDepth(element);
 		const DataSize size = dpxHeader.ComponentDataSize(element);
-		const Packing packing = dpxHeader.ImagePacking(element);
+		const Packing packing = dpxHeader.ImagePacking();
 
 		if (bitDepth == 10)
 		{
-			if (packing == kFilledMethodA)
+			/*if (packing == kFilledMethodA)
 				return Read10bitFilledMethodA<IR, BUF>(dpxHeader, readBuf, fd, element, block, reinterpret_cast<BUF *>(data));
 			else if (packing == kFilledMethodB)
 				return Read10bitFilledMethodB<IR, BUF>(dpxHeader, readBuf, fd, element, block, reinterpret_cast<BUF *>(data));
-			else if (packing == kPacked)
+			else*/ if (packing == kPacked)
 				return Read10bitPacked<IR, BUF>(dpxHeader, readBuf, fd, element, block, reinterpret_cast<BUF *>(data));
 		}
 		else if (bitDepth == 12)
 		{
 			if (packing == kPacked)
 				return Read12bitPacked<IR, BUF>(dpxHeader, readBuf, fd, element, block, reinterpret_cast<BUF *>(data));
-			else if (packing == kFilledMethodB)
+			/*else if (packing == kFilledMethodB)
 				// filled method B
 				// 12 bits fill LSB of 16 bits
 				return Read12bitFilledMethodB<IR, BUF>(dpxHeader, reinterpret_cast<U16 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));
 			else
 				// filled method A
 				// 12 bits fill MSB of 16 bits
-				return ReadBlockTypes<IR, U16, kWord, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<U16 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));
+				return ReadBlockTypes<IR, U16, kWord, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<U16 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));*/
 		}
-		else if (size == cineon::kByte)
+		/*else if (size == cineon::kByte)
 			return ReadBlockTypes<IR, U8, kByte, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<U8 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));
 		else if (size == cineon::kWord)
 			return ReadBlockTypes<IR, U16, kWord, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<U16 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));
@@ -443,7 +443,7 @@ namespace cineon
 		else if (size == cineon::kFloat)
 			return ReadBlockTypes<IR, R32, kFloat, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<R32 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));
 		else if (size == cineon::kDouble)
-			return ReadBlockTypes<IR, R64, kDouble, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<R64 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));
+			return ReadBlockTypes<IR, R64, kDouble, BUF, BUFTYPE>(dpxHeader, reinterpret_cast<R64 *>(readBuf), fd, element, block, reinterpret_cast<BUF *>(data));*/
 
 		// should not reach here
 		return false;

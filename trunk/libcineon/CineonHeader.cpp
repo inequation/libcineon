@@ -35,6 +35,7 @@
 
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 
@@ -60,7 +61,7 @@ char Hex(char x)
 
 
 
-cineon::Header::Header() : GenericHeader(), IndustryHeader(), datumSwap(true)
+cineon::Header::Header() : GenericHeader(), IndustryHeader()
 {
 }
 
@@ -80,7 +81,6 @@ void cineon::GenericHeader::Reset()
 	EmptyString(this->version, 8);
 	::strcpy(this->version, SPEC_VERSION);
 	fileSize = sizeof(cineon::Header);
-	this->dittoKey = 1;									// new
 
 	// genericSize is the size of the file/image/orientation headers
 	// sizeof(cineon::GenericHeader) won't give the correct results because
@@ -98,30 +98,23 @@ void cineon::GenericHeader::Reset()
 
 	this->userSize = 0;
 	EmptyString(this->fileName, 100);
-	EmptyString(this->creationTimeDate, 24);
-	EmptyString(this->creator, 100);
-	EmptyString(this->project, 200);
-	EmptyString(this->copyright, 200);
-	this->encryptKey = 0xffffffff;
+	EmptyString(this->creationDate, 12);
+	EmptyString(this->creationTime, 12);
 	EmptyString(this->reserved1, 104);
 
 	// Image Information
 	this->imageOrientation = kUndefinedOrientation;
 	this->numberOfElements = 0xffff;
-	this->pixelsPerLine = this->linesPerElement = 0xffffffff;
 	EmptyString(this->reserved2, 52);
 
 	// Image Orientation
 	this->xOffset = this->yOffset = 0xffffffff;
-	this->xCenter = this->yCenter = 0xffffffff;
-	this->xOriginalSize = this->yOriginalSize = 0xffffffff;
 	EmptyString(this->sourceImageFileName, 100);
-	EmptyString(this->sourceTimeDate, 24);
+	EmptyString(this->sourceDate, 12);
+	EmptyString(this->sourceTime, 12);
 	EmptyString(this->inputDevice, 32);
+	EmptyString(this->inputDeviceModelNumber, 32);
 	EmptyString(this->inputDeviceSerialNumber, 32);
-	this->border[0] = this->border[1] = this->border[2] = this->border[3] = 0xffff;
-	this->aspectRatio[0] = this->aspectRatio[1] = 0xffffffff;
-	this->xScannedSize = this->yScannedSize = 0xffffffff;
 	EmptyString(this->reserved3, 28);
 }
 
@@ -135,45 +128,26 @@ cineon::IndustryHeader::IndustryHeader()
 void cineon::IndustryHeader::Reset()
 {
 	// Motion Picture Industry Specific
-	EmptyString(this->filmManufacturingIdCode, 2);
-	EmptyString(this->filmType, 2);
-	EmptyString(this->perfsOffset, 2);
-	EmptyString(this->prefix, 6);
-	EmptyString(this->count, 4);
+	this->filmManufacturingIdCode = 0xFF;
+	this->filmType = 0xFF;
+	this->perfsOffset = 0xFF;
+	this->prefix = 0xFFFF;
+	this->count = 0xFFFF;
 	EmptyString(this->format, 32);
-	this->framePosition = this->sequenceLength = this->heldCount = 0xffffffff;
-	this->frameRate = this->shutterAngle = 0xffffffff;
+	this->framePosition = 0xffffffff;
+	this->frameRate = 0xffffffff;
 	EmptyString(this->frameId, 32);
 	EmptyString(this->slateInfo, 200);
-	EmptyString(this->reserved4, 56);
-
-	// Television Industry Specific
-	this->timeCode = this->userBits = 0xffffffff;
-	this->interlace = this->fieldNumber = 0xff;
-	this->videoSignal = kUndefined;
-	this->zero = 0xff;
-	this->horizontalSampleRate = this->verticalSampleRate = this->temporalFrameRate = 0xffffffff;
-	this->timeOffset = this->gamma = 0xffffffff;
-	this->blackLevel = this->blackGain = 0xffffffff;
-	this->breakPoint = this->whiteLevel = this->integrationTimes = 0xffffffff;
-	EmptyString(this->reserved5, 76);
 }
 
 
 cineon::ImageElement::ImageElement()
 {
-	this->dataSign = 0xffffffff;
 	this->lowData = 0xffffffff;
 	this->lowQuantity = 0xffffffff;
 	this->highData = 0xffffffff;
 	this->highQuantity = 0xffffffff;
-	this->descriptor = kUndefinedDescriptor;
-	this->transfer = kUndefinedCharacteristic;
-	this->colorimetric = kUndefinedCharacteristic;
 	this->bitDepth = 0xff;
-	this->packing = this->encoding = 0xffff;
-	this->dataOffset = this->endOfLinePadding = this->endOfImagePadding = 0xffffffff;
-	EmptyString(this->description, 32);
 }
 
 
@@ -262,7 +236,7 @@ bool cineon::Header::WriteOffsetData(OutStream *io)
 	const long FIELD21_12 = 808;	// offset to image offset in image element data structure
 	const long IMAGE_STRUCTURE = 72;	// sizeof the image data structure
 
-	int i;
+	/*int i;
 	for (i = 0; i < MAX_ELEMENTS; i++)
 	{
 			// only write if there is a defined image description
@@ -277,7 +251,7 @@ bool cineon::Header::WriteOffsetData(OutStream *io)
 			if (io->Write(&this->chan[i].dataOffset, sizeof(U32)) == false)
 				return false;
 
-	}
+	}*/
 
 	return true;
 }
@@ -321,76 +295,40 @@ bool cineon::Header::Validate()
 		// File information
 		SwapBytes(this->imageOffset);
 		SwapBytes(this->fileSize);
-		SwapBytes(this->dittoKey);
 		SwapBytes(this->genericSize);
 		SwapBytes(this->industrySize);
 		SwapBytes(this->userSize);
-		SwapBytes(this->encryptKey);
 
 		// Image information
 		SwapBytes(this->imageOrientation);
 		SwapBytes(this->numberOfElements);
-		SwapBytes(this->pixelsPerLine);
-		SwapBytes(this->linesPerElement);
+		SwapBytes(this->dataSign);
+		SwapBytes(this->packing);
+		SwapBytes(this->endOfLinePadding);
+		SwapBytes(this->endOfImagePadding);
 		for (int i = 0; i < MAX_ELEMENTS; i++)
 		{
-			SwapBytes(this->chan[i].dataSign);
+
 			SwapBytes(this->chan[i].lowData);
 			SwapBytes(this->chan[i].lowQuantity);
 			SwapBytes(this->chan[i].highData);
 			SwapBytes(this->chan[i].highQuantity);
-			SwapBytes(this->chan[i].descriptor);
-			SwapBytes(this->chan[i].transfer);
-			SwapBytes(this->chan[i].colorimetric);
 			SwapBytes(this->chan[i].bitDepth);
-			SwapBytes(this->chan[i].packing);
-			SwapBytes(this->chan[i].encoding);
-			SwapBytes(this->chan[i].dataOffset);
-			SwapBytes(this->chan[i].endOfLinePadding);
-			SwapBytes(this->chan[i].endOfImagePadding);
+			SwapBytes(this->chan[i].pixelsPerLine);
+			SwapBytes(this->chan[i].linesPerElement);
 		}
 
 
 		// Image Origination information
 		SwapBytes(this->xOffset);
 		SwapBytes(this->yOffset);
-		SwapBytes(this->xCenter);
-		SwapBytes(this->yCenter);
-		SwapBytes(this->xOriginalSize);
-		SwapBytes(this->yOriginalSize);
-		SwapBytes(this->border[0]);
-		SwapBytes(this->border[1]);
-		SwapBytes(this->border[2]);
-		SwapBytes(this->border[3]);
-		SwapBytes(this->aspectRatio[0]);
-		SwapBytes(this->aspectRatio[1]);
+		SwapBytes(this->gamma);
 
 
 		// Motion Picture Industry Specific
 		SwapBytes(this->framePosition);
-		SwapBytes(this->sequenceLength);
-		SwapBytes(this->heldCount);
 		SwapBytes(this->frameRate);
-		SwapBytes(this->shutterAngle);
 
-
-		// Television Industry Specific
-		SwapBytes(this->timeCode);
-		SwapBytes(this->userBits);
-		SwapBytes(this->interlace);
-		SwapBytes(this->fieldNumber);
-		SwapBytes(this->videoSignal);
-		SwapBytes(this->zero);
-		SwapBytes(this->horizontalSampleRate);
-		SwapBytes(this->verticalSampleRate);
-		SwapBytes(this->temporalFrameRate);
-		SwapBytes(this->timeOffset);
-		SwapBytes(this->gamma);
-		SwapBytes(this->blackLevel);
-		SwapBytes(this->blackGain);
-		SwapBytes(this->breakPoint);
-		SwapBytes(this->whiteLevel);
-		SwapBytes(this->integrationTimes);
 	}
 
 	return true;
@@ -404,70 +342,6 @@ void cineon::Header::Reset()
 	IndustryHeader::Reset();
 }
 
-
-int cineon::GenericHeader::ImageElementComponentCount(const int element) const
-{
-	int count = 1;
-
-	switch (this->chan[element].descriptor)
-	{
-	case kUserDefinedDescriptor:
-	case kRed:
-	case kGreen:
-	case kBlue:
-	case kAlpha:
-	case kLuma:
-	case kColorDifference:
-	case kDepth:
-		count = 1;
-		break;
-	case kCompositeVideo:
-		count = 1;
-		break;
-	case kRGB:
-		count = 3;
-		break;
-	case kRGBA:
-	case kABGR:
-		count = 4;
-		break;
-	case kCbYCrY:
-		count = 2;
-		break;
-	case kCbYACrYA:
-		count = 3;
-		break;
-	case kCbYCr:
-		count = 3;
-		break;
-	case kCbYCrA:
-		count = 4;
-		break;
-	case kUserDefined2Comp:
-		count = 2;
-		break;
-	case kUserDefined3Comp:
-		count = 3;
-		break;
-	case kUserDefined4Comp:
-		count = 4;
-		break;
-	case kUserDefined5Comp:
-		count = 5;
-		break;
-	case kUserDefined6Comp:
-		count = 6;
-		break;
-	case kUserDefined7Comp:
-		count = 7;
-		break;
-	case kUserDefined8Comp:
-		count = 8;
-		break;
-	};
-
-	return count;
-}
 
 
 int cineon::GenericHeader::ImageElementCount() const
@@ -503,7 +377,7 @@ void cineon::Header::CalculateOffsets()
 	for (i = 0; i < MAX_ELEMENTS; i++)
 	{
 		// only write if there is a defined image description
-		if (this->chan[i].descriptor == kUndefinedDescriptor)
+		if (this->chan[i].designator[1] == kUndefinedDescriptor)
 			continue;
 
 
@@ -599,116 +473,34 @@ int cineon::GenericHeader::DataSizeByteCount(const DataSize ds)
 
 void cineon::IndustryHeader::FilmEdgeCode(char *edge) const
 {
-	edge[0] = this->filmManufacturingIdCode[0];
-	edge[1] = this->filmManufacturingIdCode[1];
-	edge[2] = this->filmType[0];
-	edge[3] = this->filmType[1];
-	edge[4] = this->perfsOffset[0];
-	edge[5] = this->perfsOffset[1];
-	edge[6] = this->prefix[0];
-	edge[7] = this->prefix[1];
-	edge[8] = this->prefix[2];
-	edge[9] = this->prefix[3];
-	edge[10] = this->prefix[4];
-	edge[11] = this->prefix[5];
-	edge[12] = this->count[0];
-	edge[13] = this->count[1];
-	edge[14] = this->count[2];
-	edge[15] = this->count[3];
-	edge[16] = '\0';
+	sprintf(edge, "%02d%02d%02d%06d%04d",
+		this->filmManufacturingIdCode,
+		this->filmType,
+		this->perfsOffset,
+		this->prefix,
+		this->count);
 }
 
 
-void cineon::IndustryHeader::SetFileEdgeCode(const char *edge)
+void cineon::IndustryHeader::SetFilmEdgeCode(const char *edge)
 {
-	this->filmManufacturingIdCode[0] = edge[0];
-	this->filmManufacturingIdCode[1] = edge[1];
-	this->filmType[0] = edge[2];
-	this->filmType[1] = edge[3];
-	this->perfsOffset[0] = edge[4];
-	this->perfsOffset[1] = edge[5];
-	this->prefix[0] = edge[6];
-	this->prefix[1] = edge[7];
-	this->prefix[2] = edge[8];
-	this->prefix[3] = edge[9];
-	this->prefix[4] = edge[10];
-	this->prefix[5] = edge[11];
-	this->count[0] = edge[12];
-	this->count[1] = edge[13];
-	this->count[2] = edge[14];
-	this->count[3] = edge[15];
+	char buf[7];
+
+	strncpy(buf, edge, 2);
+	this->filmManufacturingIdCode = atoi(buf);
+
+	strncpy(buf, edge + 2, 2);
+	this->filmType = atoi(buf);
+
+	strncpy(buf, edge + 4, 2);
+	this->perfsOffset = atoi(buf);
+
+	strncpy(buf, edge + 6, 6);
+	this->prefix = atoi(buf);
+
+	strncpy(buf, edge + 12, 4);
+	this->count = atoi(buf);
 }
-
-
-void cineon::IndustryHeader::TimeCode(char *str) const
-{
-	register U32 tc = this->timeCode;
-	::sprintf(str, "%c%c:%c%c:%c%c:%c%c",
-		Hex((tc & 0xf0000000) >> 28),  Hex((tc & 0xf000000) >> 24),
-		Hex((tc & 0xf00000) >> 20),  Hex((tc & 0xf0000) >> 16),
-		Hex((tc & 0xf000) >> 12),  Hex((tc & 0xf00) >> 8),
-		Hex((tc & 0xf0) >> 4),  Hex(tc & 0xf));
-}
-
-
-void cineon::IndustryHeader::UserBits(char *str) const
-{
-	register U32 ub = this->userBits;
-	::sprintf(str, "%c%c:%c%c:%c%c:%c%c",
-		Hex((ub & 0xf0000000) >> 28),  Hex((ub & 0xf000000) >> 24),
-		Hex((ub & 0xf00000) >> 20),  Hex((ub & 0xf0000) >> 16),
-		Hex((ub & 0xf000) >> 12),  Hex((ub & 0xf00) >> 8),
-		Hex((ub & 0xf0) >> 4),  Hex(ub & 0xf));
-}
-
-
-cineon::U32 cineon::IndustryHeader::TCFromString(const char *str) const
-{
-	// make sure the string is the correct length
-	if (::strlen(str) != 11)
-		return U32(~0);
-
-	U32 tc = 0;
-	int i, idx;
-	U8 ch;
-	U32 value, mask;
-
-	for (i = 0; i < 8; i++)
-	{
-		// determine string index skipping :
-		idx = i + ((i + 1) / 3);
-		ch = str[idx];
-
-		// error check
-		if (ch < '0' || ch > '9')
-			return 0xffffffff;
-
-		value = U32(ch - '0') << (28 - (i*4));
-		mask = 0xf << (28 - (i*4));
-
-		// mask in new value
-		tc = (tc & ~mask) | (value & mask);
-	}
-
-	return tc;
-}
-
-
-void cineon::IndustryHeader::SetTimeCode(const char *str)
-{
-	U32 tc = this->TCFromString(str);
-	if (tc != 0xffffffff)
-		this->timeCode = tc;
-}
-
-
-void cineon::IndustryHeader::SetUserBits(const char *str)
-{
-	U32 ub = this->TCFromString(str);
-	if (ub != 0xffffffff)
-		this->timeCode = ub;
-}
-
 
 
 static void EmptyString(char *str, const int len)
@@ -730,7 +522,8 @@ void cineon::GenericHeader::SetCreationTimeDate(const long sec)
 	const time_t t = time_t(sec);
 	tm_time = ::localtime(&t);
 	::strftime(str, 32, "%Y:%m:%d:%H:%M:%S%Z", tm_time);
-	::strncpy(this->creationTimeDate, str, 24);
+	::strncpy(this->creationDate, str, 10);
+	::strncpy(this->creationTime, str + 11, 12);
 }
 
 
@@ -746,33 +539,18 @@ void cineon::GenericHeader::SetSourceTimeDate(const long sec)
 	const time_t t = time_t(sec);
 	tm_time = ::localtime(&t);
 	::strftime(str, 32, "%Y:%m:%d:%H:%M:%S%Z", tm_time);
-	::strncpy(this->sourceTimeDate, str, 24);
+	::strncpy(this->sourceDate, str, 10);
+	::strncpy(this->sourceTime, str + 11, 12);
 }
 
 
-
-bool cineon::Header::DatumSwap(const int element) const
-{
-	if (this->datumSwap)
-	{
-		if (this->ImageDescriptor(element) == kRGB || this->ImageDescriptor(element) == kCbYCrY)
-			return true;
-	}
-	return false;
-}
-
-
-void cineon::Header::SetDatumSwap(const bool swap)
-{
-	this->datumSwap = swap;
-}
 
 // Height()
 // this function determines the height of the image taking in account for the image orientation
 // if an image is 1920x1080 but is oriented top to bottom, left to right then the height stored
 // in the image is 1920 rather than 1080
 
-cineon::U32 cineon::Header::Height() const
+cineon::U32 cineon::Header::Height(const int i) const
 {
 	U32 h;
 
@@ -782,10 +560,10 @@ cineon::U32 cineon::Header::Height() const
 	case kTopToBottomRightToLeft:
 	case kBottomToTopLeftToRight:
 	case kBottomToTopRightToLeft:
-		h = this->PixelsPerLine();
+		h = this->PixelsPerLine(i);
 		break;
 	default:
-		h = this->LinesPerElement();
+		h = this->LinesPerElement(i);
 		break;
 	}
 
@@ -798,7 +576,7 @@ cineon::U32 cineon::Header::Height() const
 // if an image is 1920x1080 but is oriented top to bottom, left to right then the width stored
 // in the image is 1920 rather than 1080
 
-cineon::U32 cineon::Header::Width() const
+cineon::U32 cineon::Header::Width(const int i) const
 {
 	U32 w;
 
@@ -808,10 +586,10 @@ cineon::U32 cineon::Header::Width() const
 	case kTopToBottomRightToLeft:
 	case kBottomToTopLeftToRight:
 	case kBottomToTopRightToLeft:
-		w = this->LinesPerElement();
+		w = this->LinesPerElement(i);
 		break;
 	default:
-		w = this->PixelsPerLine();
+		w = this->PixelsPerLine(i);
 		break;
 	}
 
