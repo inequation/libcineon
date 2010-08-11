@@ -409,7 +409,7 @@ namespace cineon
 	bool ReadImageBlock(const Header &dpxHeader, U32 *readBuf, IR *fd, const int element, const Block &block, BUF *data)
 	{
 		const int bitDepth = dpxHeader.BitDepth(element);
-		const DataSize size = dpxHeader.ComponentDataSize(element);
+		//const DataSize size = dpxHeader.ComponentDataSize(element);
 		const Packing packing = dpxHeader.ImagePacking();
 
 		if (bitDepth == 10)
