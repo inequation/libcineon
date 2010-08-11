@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4 -*-
 // vi: ts=4
 
-/*! \file DPXHeader.h */
+/*! \file CineonHeader.h */
 
 /*
  * Copyright (c) 2010, Patrick A. Palmer and Leszek Godlewski.
@@ -35,11 +35,11 @@
  */
 
 
-// SMPTE DPX graphic file format v2.0
+// Cineon graphic file format v4.5
 
 
-#ifndef _CINEON_DPXHEADER_H
-#define _CINEON_DPXHEADER_H 1
+#ifndef _CINEON_CINEONHEADER_H
+#define _CINEON_CINEONHEADER_H 1
 
 #include <cstring>
 
@@ -152,7 +152,7 @@ namespace cineon
 		kTopToBottomRightToLeft = 5,					//!< Oriented top to bottom, right to left
 		kBottomToTopLeftToRight = 6,					//!< Oriented bottom to top, left to right
 		kBottomToTopRightToLeft = 7,					//!< Oriented bottom to top, right to left
-		kUndefinedOrientation = 0xffff					//!< Undefined orientation
+		kUndefinedOrientation = 0xff					//!< Undefined orientation
 	};
 
 
@@ -272,6 +272,7 @@ namespace cineon
 		U8					imageSense;					//!< Image sense (0 = positive image, 1 = negative image)
 		U32					endOfLinePadding;			//!< End-of-Line Padding
 		U32					endOfImagePadding;			//!< End-of-Image Padding
+		ASCII				reserved3[20];
 		/* end of group */
 		//@}
 
@@ -291,7 +292,7 @@ namespace cineon
 		R32					xDevicePitch;				//!< X device pitch (samples/mm)
 		R32					yDevicePitch;				//!< Y device pitch (samples/mm)
 		R32					gamma;						//!< Gamma
-		ASCII				reserved3[40];				//!< Reserved
+		ASCII				reserved4[40];				//!< Reserved
 		/* end of group */
 		//@}
 
@@ -1091,18 +1092,17 @@ namespace cineon
 		bool				Check();
 
 		/*!
-		 * \brief Height of the element adjusted for orientation
-		 * \param element image element
+		 * \brief Height of the image (maximum of all elements' heights) adjusted for orientation
 		 * \return height
 		 */
-		U32					Height(const int element) const;
+		U32					Height() const;
 
 		/*!
-		 * \brief Width of the element adjusted for orientation
+		 * \brief Width of the image (maximum of all elements' widths) adjusted for orientation
 		 * \param element image element
 		 * \return width
 		 */
-		U32					Width(const int element) const;
+		U32					Width() const;
 
 
 	protected:
@@ -1463,6 +1463,17 @@ namespace cineon
 	inline void  GenericHeader::SetInputDevice(const char *dev)
 	{
 		::strncpy(this->inputDevice, dev, 32);
+	}
+
+	inline void GenericHeader::InputDeviceModelNumber(char *sn) const
+	{
+		::strncpy(sn, this->inputDeviceModelNumber, 32);
+		sn[32] = '\0';
+	}
+
+	inline void GenericHeader::SetInputDeviceModelNumber(const char *sn)
+	{
+		::strncpy(this->inputDeviceModelNumber, sn, 32);
 	}
 
 	inline void GenericHeader::InputDeviceSerialNumber(char *sn) const

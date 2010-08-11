@@ -38,6 +38,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <limits>
 
 
 #include "CineonHeader.h"
@@ -45,8 +46,11 @@
 
 
 
-// function prototypes
-static void EmptyString(char *, const int);
+// shortcut macros
+#define EmptyString(x)	memset(x, 0, sizeof(x))
+#define EmptyFloat(x)	x = std::numeric_limits<R32>::infinity()
+#define EmptyVector(x)	(EmptyFloat((x)[0]),	\
+						EmptyFloat((x)[1]))
 
 
 
@@ -78,44 +82,54 @@ void cineon::GenericHeader::Reset()
 	// File Information
 	this->magicNumber = MAGIC_COOKIE;
 	this->imageOffset = ~0;
-	EmptyString(this->version, 8);
+	EmptyString(this->version);
 	::strcpy(this->version, SPEC_VERSION);
 	fileSize = sizeof(cineon::Header);
 
 	// genericSize is the size of the file/image/orientation headers
 	// sizeof(cineon::GenericHeader) won't give the correct results because
 	// of compiler padding
-	//		file header is 768 bytes
-	//		image header is 640 bytes
-	//		orientation header 256 bytes
-
-	this->genericSize = 768 + 640 + 256;
+	this->genericSize = 1024;
 
 	// industrySize is the size of the motion picture/television headers
-	//		motion picture header is 256 bytes
-	//		television header is 128 bytes
-	this->industrySize = 256 + 128;
+	this->industrySize = 1024;
 
 	this->userSize = 0;
-	EmptyString(this->fileName, 100);
-	EmptyString(this->creationDate, 12);
-	EmptyString(this->creationTime, 12);
-	EmptyString(this->reserved1, 104);
+	EmptyString(this->fileName);
+	EmptyString(this->creationDate);
+	EmptyString(this->creationTime);
+	EmptyString(this->reserved1);
 
 	// Image Information
 	this->imageOrientation = kUndefinedOrientation;
-	this->numberOfElements = 0xffff;
-	EmptyString(this->reserved2, 52);
+	this->numberOfElements = 0xff;
+	this->unused1[0] = this->unused1[1] = 0xff;
+	EmptyVector(this->whitePoint);
+	EmptyVector(this->redPrimary);
+	EmptyVector(this->greenPrimary);
+	EmptyVector(this->bluePrimary);
+	EmptyString(this->labelText);
+	EmptyString(this->reserved2);
+	this->interleave = 0xff;
+	this->packing = 0xff;
+	this->dataSign = 0xff;
+	this->imageSense = 0xff;
+	this->endOfLinePadding = 0xffffffff;
+	this->endOfImagePadding = 0xffffffff;
 
 	// Image Orientation
 	this->xOffset = this->yOffset = 0xffffffff;
-	EmptyString(this->sourceImageFileName, 100);
-	EmptyString(this->sourceDate, 12);
-	EmptyString(this->sourceTime, 12);
-	EmptyString(this->inputDevice, 32);
-	EmptyString(this->inputDeviceModelNumber, 32);
-	EmptyString(this->inputDeviceSerialNumber, 32);
-	EmptyString(this->reserved3, 28);
+	EmptyString(this->sourceImageFileName);
+	EmptyString(this->sourceDate);
+	EmptyString(this->sourceTime);
+	EmptyString(this->inputDevice);
+	EmptyString(this->inputDeviceModelNumber);
+	EmptyString(this->inputDeviceSerialNumber);
+	EmptyFloat(this->xDevicePitch);
+	EmptyFloat(this->yDevicePitch);
+	EmptyFloat(this->gamma);
+	EmptyString(this->reserved3);
+	EmptyString(this->reserved4);
 }
 
 
@@ -131,13 +145,14 @@ void cineon::IndustryHeader::Reset()
 	this->filmManufacturingIdCode = 0xFF;
 	this->filmType = 0xFF;
 	this->perfsOffset = 0xFF;
-	this->prefix = 0xFFFF;
-	this->count = 0xFFFF;
-	EmptyString(this->format, 32);
+	this->prefix = 0xFFFFFFFF;
+	this->count = 0xFFFFFFFF;
+	EmptyString(this->format);
 	this->framePosition = 0xffffffff;
-	this->frameRate = 0xffffffff;
-	EmptyString(this->frameId, 32);
-	EmptyString(this->slateInfo, 200);
+	EmptyFloat(this->frameRate);
+	EmptyString(this->frameId);
+	EmptyString(this->slateInfo);
+	EmptyString(this->reserved1);
 }
 
 
@@ -294,38 +309,45 @@ bool cineon::Header::Validate()
 	{
 		// File information
 		SwapBytes(this->imageOffset);
-		SwapBytes(this->fileSize);
 		SwapBytes(this->genericSize);
 		SwapBytes(this->industrySize);
 		SwapBytes(this->userSize);
+		SwapBytes(this->fileSize);
 
 		// Image information
-		SwapBytes(this->imageOrientation);
-		SwapBytes(this->numberOfElements);
-		SwapBytes(this->dataSign);
-		SwapBytes(this->packing);
-		SwapBytes(this->endOfLinePadding);
-		SwapBytes(this->endOfImagePadding);
 		for (int i = 0; i < MAX_ELEMENTS; i++)
 		{
-
+			SwapBytes(this->chan[i].pixelsPerLine);
+			SwapBytes(this->chan[i].linesPerElement);
 			SwapBytes(this->chan[i].lowData);
 			SwapBytes(this->chan[i].lowQuantity);
 			SwapBytes(this->chan[i].highData);
 			SwapBytes(this->chan[i].highQuantity);
 			SwapBytes(this->chan[i].bitDepth);
-			SwapBytes(this->chan[i].pixelsPerLine);
-			SwapBytes(this->chan[i].linesPerElement);
 		}
+		SwapBytes(this->whitePoint[0]);
+		SwapBytes(this->whitePoint[1]);
+		SwapBytes(this->redPrimary[0]);
+		SwapBytes(this->redPrimary[1]);
+		SwapBytes(this->greenPrimary[0]);
+		SwapBytes(this->greenPrimary[1]);
+		SwapBytes(this->bluePrimary[0]);
+		SwapBytes(this->bluePrimary[1]);
+		SwapBytes(this->endOfLinePadding);
+		SwapBytes(this->endOfImagePadding);
 
 
 		// Image Origination information
 		SwapBytes(this->xOffset);
 		SwapBytes(this->yOffset);
+		SwapBytes(this->xDevicePitch);
+		SwapBytes(this->yDevicePitch);
 		SwapBytes(this->gamma);
 
 
 		// Motion Picture Industry Specific
+		SwapBytes(this->prefix);
+		SwapBytes(this->count);
 		SwapBytes(this->framePosition);
 		SwapBytes(this->frameRate);
 
@@ -364,9 +386,9 @@ void cineon::GenericHeader::CalculateNumberOfElements()
 	int i = this->ImageElementCount();
 
 	if (i == 0)
-		this->numberOfElements = 0xffff;
+		this->numberOfElements = 0xff;
 	else
-		this->numberOfElements = U16(i);
+		this->numberOfElements = U8(i);
 }
 
 
@@ -503,13 +525,6 @@ void cineon::IndustryHeader::SetFilmEdgeCode(const char *edge)
 }
 
 
-static void EmptyString(char *str, const int len)
-{
-	for (int i = 0; i < len; i++)
-		str[i] = '\0';
-}
-
-
 void cineon::GenericHeader::SetCreationTimeDate(const long sec)
 {
 	struct tm *tm_time;
@@ -550,21 +565,25 @@ void cineon::GenericHeader::SetSourceTimeDate(const long sec)
 // if an image is 1920x1080 but is oriented top to bottom, left to right then the height stored
 // in the image is 1920 rather than 1080
 
-cineon::U32 cineon::Header::Height(const int i) const
+cineon::U32 cineon::Header::Height() const
 {
-	U32 h;
+	U32 h = 0;
 
-	switch (this->ImageOrientation())
-	{
-	case kTopToBottomLeftToRight:
-	case kTopToBottomRightToLeft:
-	case kBottomToTopLeftToRight:
-	case kBottomToTopRightToLeft:
-		h = this->PixelsPerLine(i);
-		break;
-	default:
-		h = this->LinesPerElement(i);
-		break;
+	for (int i = 0; i < this->NumberOfElements(); i++) {
+		switch (this->ImageOrientation())
+		{
+		case kTopToBottomLeftToRight:
+		case kTopToBottomRightToLeft:
+		case kBottomToTopLeftToRight:
+		case kBottomToTopRightToLeft:
+			if (this->PixelsPerLine(i) > h)
+				h = this->PixelsPerLine(i);
+			break;
+		default:
+			if (this->LinesPerElement(i) > h)
+				h = this->LinesPerElement(i);
+			break;
+		}
 	}
 
 	return h;
@@ -576,21 +595,25 @@ cineon::U32 cineon::Header::Height(const int i) const
 // if an image is 1920x1080 but is oriented top to bottom, left to right then the width stored
 // in the image is 1920 rather than 1080
 
-cineon::U32 cineon::Header::Width(const int i) const
+cineon::U32 cineon::Header::Width() const
 {
-	U32 w;
+	U32 w = 0;
 
-	switch (this->ImageOrientation())
-	{
-	case kTopToBottomLeftToRight:
-	case kTopToBottomRightToLeft:
-	case kBottomToTopLeftToRight:
-	case kBottomToTopRightToLeft:
-		w = this->LinesPerElement(i);
-		break;
-	default:
-		w = this->PixelsPerLine(i);
-		break;
+	for (int i = 0; i < this->NumberOfElements(); i++) {
+		switch (this->ImageOrientation())
+		{
+		case kTopToBottomLeftToRight:
+		case kTopToBottomRightToLeft:
+		case kBottomToTopLeftToRight:
+		case kBottomToTopRightToLeft:
+			if (this->LinesPerElement(i) > w)
+				w = this->LinesPerElement(i);
+			break;
+		default:
+			if (this->PixelsPerLine(i) > w)
+				w = this->PixelsPerLine(i);
+			break;
+		}
 	}
 
 	return w;

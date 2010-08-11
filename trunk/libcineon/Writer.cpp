@@ -212,8 +212,8 @@ bool cineon::Writer::WriteElement(const int element, void *data, const DataSize 
 	const U32 eolnPad = this->header.EndOfLinePadding();
 	const U32 eoimPad = this->header.EndOfImagePadding();
 	const U8 bitDepth = this->header.BitDepth(element);
-	const U32 width = this->header.Width(element);
-	const U32 height = this->header.Height(element);
+	const U32 width = this->header.Width();
+	const U32 height = this->header.Height();
 	const int noc = this->header.ImageElementComponentCount(element);
 	const Packing packing = this->header.ImagePacking();
 

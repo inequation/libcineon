@@ -1,7 +1,7 @@
 /// -*- mode: C++; tab-width: 4 -*-
 // vi: ts=4
 
-/*! \file DPXStream.h */
+/*! \file CineonStream.h */
 
 /*
  * Copyright (c) 2010, Patrick A. Palmer and Leszek Godlewski.
@@ -35,8 +35,8 @@
  */
 
 
-#ifndef _CINEON_DPXSTREAM_H
-#define _CINEON_DPXSTREAM_H 1
+#ifndef _CINEON_CINEONSTREAM_H
+#define _CINEON_CINEONSTREAM_H 1
 
 
 #include <cstdio>
