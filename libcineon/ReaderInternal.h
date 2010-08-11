@@ -134,7 +134,7 @@ namespace cineon
 			// determine offset into image element
 
 			// first get line offset
-			long offset = (line + block.y1) * dpxHeader.Width(element) * numberOfComponents;
+			long offset = (line + block.y1) * dpxHeader.Width() * numberOfComponents;
 			offset += offset % 3;
 			offset = offset / 3 * 4;
 
@@ -151,7 +151,7 @@ namespace cineon
 			readSize = readSize / 3 * 4;
 
 			// determine buffer offset
-			int bufoff = line * dpxHeader.Width(element) * numberOfComponents;
+			int bufoff = line * dpxHeader.Width() * numberOfComponents;
 
 			fd->Read(dpxHeader, element, offset, readBuf, readSize);
 
@@ -248,7 +248,7 @@ namespace cineon
 		const int dataSize = dpxHeader.BitDepth(element);
 
 		// number of bytes
-		const int lineSize = (dpxHeader.Width(element) * numberOfComponents * dataSize + 31) / 32;
+		const int lineSize = (dpxHeader.Width() * numberOfComponents * dataSize + 31) / 32;
 
 		// read in each line at a time directly into the user memory space
 		for (int line = 0; line < height; line++)
@@ -263,7 +263,7 @@ namespace cineon
 			readSize = ((readSize + 31) / 32) * sizeof(U32);
 
 			// calculate buffer offset
-			int bufoff = line * dpxHeader.Width(element) * numberOfComponents;
+			int bufoff = line * dpxHeader.Width() * numberOfComponents;
 
 			fd->Read(dpxHeader, element, offset, readBuf, readSize);
 
@@ -309,7 +309,7 @@ namespace cineon
 			eolnPad = 0;
 
 		// image width
-		const int imageWidth = dpxHeader.Width(element);
+		const int imageWidth = dpxHeader.Width();
 
 		// read in each line at a time directly into the user memory space
 		for (int line = 0; line < height; line++)
@@ -349,7 +349,7 @@ namespace cineon
 		const int height = block.y2 - block.y1 + 1;
 
 		// width of image
-		const int imageWidth = dpxHeader.Width(element);
+		const int imageWidth = dpxHeader.Width();
 
 		// end of line padding (not a required data element so check for ~0)
 		int eolnPad = dpxHeader.EndOfLinePadding();

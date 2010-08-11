@@ -36,6 +36,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cassert>
 
 
 #include "Cineon.h"
@@ -111,7 +112,7 @@ int main(int argc, char **argv)
 	// conversion
 	int format = PHOTOMETRIC_RGB;
 	int elementCount = 3;
-	if (dpx.header.ImageElementComponentCount(0) == 1) {
+	if (dpx.header.NumberOfElements() == 1) {
 		format = PHOTOMETRIC_MINISBLACK;
 		elementCount = 1;
 	}
@@ -146,7 +147,7 @@ int main(int argc, char **argv)
 		block.y1 = y;
 		block.y2 = y;
 
-		if (dpx.ReadBlock(buf, size, block, dpx.header.ImageDescriptor(0)) == false)
+		/*if (dpx.ReadBlock(buf, size, block, dpx.header.ImageDescriptor(0)) == false)
 		{
 			cout << "unable to read line " << y << " with component data size " << size << endl;
 			return 5;
@@ -156,7 +157,8 @@ int main(int argc, char **argv)
 		{
 			cout << "unable to write tiff scanline " << y << endl;
 			return 6;
-		}
+		}*/
+		assert(!"FIXME");
 	}
 
 
