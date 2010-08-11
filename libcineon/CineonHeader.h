@@ -1328,6 +1328,20 @@ namespace cineon
 		this->chan[i].highQuantity = quant;
 	}
 
+	inline U8 GenericHeader::Metric(const int i) const
+	{
+		if (i < 0 || i >= MAX_ELEMENTS)
+			return 0xff;
+		return this->chan[i].designator[0];
+	}
+
+	inline void GenericHeader::SetMetric(const int i, const U8 m)
+	{
+		if (i < 0 || i >= MAX_ELEMENTS)
+			return;
+		this->chan[i].designator[0] = m;
+	}
+
 	inline Descriptor GenericHeader::ImageDescriptor(const int i) const
 	{
 		if (i < 0 || i >= MAX_ELEMENTS)
@@ -1419,6 +1433,46 @@ namespace cineon
 	inline void GenericHeader::SetYOffset(const S32 offset)
 	{
 		this->yOffset = offset;
+	}
+
+	inline void	GenericHeader::WhitePoint(R32 xy[2]) const
+	{
+		memcpy(xy, this->whitePoint, sizeof(xy[0]) * 2);
+	}
+
+	inline void	GenericHeader::SetWhitePoint(const R32 xy[2])
+	{
+		memcpy(this->whitePoint, xy, sizeof(this->whitePoint[0]) * 2);
+	}
+
+	inline void	GenericHeader::RedPrimary(R32 xy[2]) const
+	{
+		memcpy(xy, this->redPrimary, sizeof(xy[0]) * 2);
+	}
+
+	inline void	GenericHeader::SetRedPrimary(const R32 xy[2])
+	{
+		memcpy(this->redPrimary, xy, sizeof(this->redPrimary[0]) * 2);
+	}
+
+	inline void	GenericHeader::GreenPrimary(R32 xy[2]) const
+	{
+		memcpy(xy, this->greenPrimary, sizeof(xy[0]) * 2);
+	}
+
+	inline void	GenericHeader::SetGreenPrimary(const R32 xy[2])
+	{
+		memcpy(this->greenPrimary, xy, sizeof(this->greenPrimary[0]) * 2);
+	}
+
+	inline void	GenericHeader::BluePrimary(R32 xy[2]) const
+	{
+		memcpy(xy, this->bluePrimary, sizeof(xy[0]) * 2);
+	}
+
+	inline void	GenericHeader::SetBluePrimary(const R32 xy[2])
+	{
+		memcpy(this->bluePrimary, xy, sizeof(this->bluePrimary[0]) * 2);
 	}
 
 	inline void GenericHeader::SourceImageFileName(char *fn) const
