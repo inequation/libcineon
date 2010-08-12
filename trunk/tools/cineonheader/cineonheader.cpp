@@ -272,12 +272,24 @@ string DisplayPacking(U8 p)
 	case kPacked:
 		s = "Packed";
 		break;
-/*	case kFilledMethodA:
-		s = "Filled Method A";
+	case kByteLeft:
+		s = "8-bit boundary, left justified";
 		break;
-	case kFilledMethodB:
-		s = "Filled Method B";
-		break;*/
+	case kByteRight:
+		s = "8-bit boundary, right justified";
+		break;
+	case kWordLeft:
+		s = "16-bit boundary, left justified";
+		break;
+	case kWordRight:
+		s = "16-bit boundary, right justified";
+		break;
+	case kLongWordLeft:
+		s = "32-bit boundary, left justified";
+		break;
+	case kLongWordRight:
+		s = "32-bit boundary, right justified";
+		break;
 	default:
 		s = "Unknown " + Display(p);
 	}
@@ -287,6 +299,29 @@ string DisplayPacking(U8 p)
 
 
 
+string DisplayInterleave(U8 i)
+{
+	string s;
+
+	switch (i)
+	{
+	case kPixel:
+		s = "Pixel";
+		break;
+	case kLine:
+		s = "Line";
+		break;
+	case kChannel:
+		s = "Channel (planar)";
+		break;
+	default:
+		s = "Unknown " + Display(i);
+	}
+
+	return s;
+}
+
+
 
 string DisplayDescriptor(U8 d)
 {
@@ -294,75 +329,27 @@ string DisplayDescriptor(U8 d)
 
 	switch (d)
 	{
-/*	case kUserDefinedDescriptor:
-		s = "User Defined";
+	case cineon::kGrayscale:
+		s = "Grayscale";
 		break;
-	case kRed:
-		s = "Red";
+	case cineon::kPrintingDensityRed:
+		s = "Red, printing density";
 		break;
-	case kGreen:
-		s = "Green";
+	case cineon::kRec709Red:
+		s = "Red, Rec709";
 		break;
-	case kBlue:
-		s = "Blue";
+	case cineon::kPrintingDensityGreen:
+		s = "Green, printing density";
 		break;
-	case kAlpha:
-		s = "Alpha";
+	case cineon::kRec709Green:
+		s = "Green, Rec709";
 		break;
-	case kLuma:
-		s = "Luma";
+	case cineon::kPrintingDensityBlue:
+		s = "Blue, printing density";
 		break;
-	case kColorDifference:
-		s = "Color Difference";
+	case cineon::kRec709Blue:
+		s = "Blue, Rec709";
 		break;
-	case kDepth:
-		s = "Depth";
-		break;
-	case kCompositeVideo:
-		s = "Composite Video";
-		break;
-	case kRGB:
-		s = "RGB";
-		break;
-	case kRGBA:
-		s = "RGBA";
-		break;
-	case kABGR:
-		s = "ABGR";
-		break;
-	case kCbYCrY:
-		s = "CbYCrY";
-		break;
-	case kCbYACrYA:
-		s = "CbYaCrYa";
-		break;
-	case kCbYCr:
-		s = "CbYCr";
-		break;
-	case kCbYCrA:
-		s = "CbYCra";
-		break;
-	case kUserDefined2Comp:
-		s = "User Defined 2";
-		break;
-	case kUserDefined3Comp:
-		s = "User Defined 3";
-		break;
-	case kUserDefined4Comp:
-		s = "User Defined 4";
-		break;
-	case kUserDefined5Comp:
-		s = "User Defined 5";
-		break;
-	case kUserDefined6Comp:
-		s = "User Defined 6";
-		break;
-	case kUserDefined7Comp:
-		s = "User Defined 7";
-		break;
-	case kUserDefined8Comp:
-		s = "User Defined 8";
-		break;*/
 	case kUndefinedDescriptor:
 		s = "Undefined";
 		break;
@@ -442,10 +429,10 @@ int main(int argc, char **argv)
 	StrOutput("Magic Number", buf, 8, xml);
 	StrOutput("Endian Swap", (header.RequiresByteSwap() ? "true" : "false"), 6, xml);
 	Output("Image Offset", Display(header.ImageOffset()), xml);
-	Output("File Size", Display(header.FileSize()), xml);
 	Output("Generic Size", Display(header.GenericSize()), xml);
 	Output("Industry Size", Display(header.IndustrySize()), xml);
 	Output("User Size", Display(header.UserSize()), xml);
+	Output("File Size", Display(header.FileSize()), xml);
 
 	header.FileName(str);
 	StrOutput("Filename", str, 100, xml);
@@ -460,21 +447,36 @@ int main(int argc, char **argv)
 	for (int i = 0; i < header.numberOfElements; i++)
 	{
 		StartSub("Image Element", (i+1), xml);
+		StrOutput("Metric", (header.Metric(i) == 0 ? "universal" : "" + header.Metric(i)), 10, xml);
+		Output("Descriptor", DisplayDescriptor(header.ImageDescriptor(i)), xml);
+		Output("Bit Size", Display(header.BitDepth(i)), xml);
 		Output("Width", Display(header.PixelsPerLine(i)), xml);
 		Output("Height", Display(header.LinesPerElement(i)), xml);
 		Output("Low Data", Display(header.LowData(i)), xml);
 		Output("Low Quantity", Display(header.LowQuantity(i)), xml);
 		Output("High Data", Display(header.HighData(i)), xml);
 		Output("High Quantity", Display(header.chan[i].highQuantity), xml);
-		Output("Descriptor", DisplayDescriptor(header.ImageDescriptor(i)), xml);
-		Output("Bit Size", Display(header.BitDepth(i)), xml);
 		EndSub("Image Element", xml);
 	}
 
+	float coords[2];
+	header.WhitePoint(coords);
+	Output("White Point X", Display(coords[0]), xml);
+	Output("White Point Y", Display(coords[1]), xml);
+	header.RedPrimary(coords);
+	Output("Red Primary X", Display(coords[0]), xml);
+	Output("Red Primary Y", Display(coords[1]), xml);
+	header.GreenPrimary(coords);
+	Output("Green Primary X", Display(coords[0]), xml);
+	Output("Green Primary Y", Display(coords[1]), xml);
+	header.BluePrimary(coords);
+	Output("Blue Primary X", Display(coords[0]), xml);
+	Output("Blue Primary Y", Display(coords[1]), xml);
 	header.LabelText(str);
-	StrOutput("LabelText", str, 200, xml);
-	Output("Data Sign", Display(header.DataSign()), xml);
+	StrOutput("Label Text", str, 200, xml);
+	Output("Interleave", DisplayInterleave(header.ImageInterleave()), xml);
 	Output("Packing", DisplayPacking(header.ImagePacking()), xml);
+	Output("Data Sign", Display(header.DataSign()), xml);
 	Output("End of Line Padding", Display(header.EndOfLinePadding()), xml);
 	Output("End of Image Padding", Display(header.EndOfImagePadding()), xml);
 
@@ -494,6 +496,7 @@ int main(int argc, char **argv)
 	StrOutput("Input Device Serial Number", str, 32, xml);
 	Output("X Device Pitch", Display(header.XDevicePitch()), xml);
 	Output("Y Device Pitch", Display(header.YDevicePitch()), xml);
+	Output("Gamma", Display(header.Gamma()), xml);
 
 	header.FilmEdgeCode(buf);
 	StrOutput("Film Code", buf, 16, xml);

@@ -42,6 +42,9 @@
 #define _CINEON_CINEONHEADER_H 1
 
 #include <cstring>
+#if HAVE_STDINT_H
+	#include <stdint.h>
+#endif
 
 #include "CineonStream.h"
 
@@ -106,6 +109,12 @@ namespace cineon
 	typedef signed int		S32;
 
 	/*!
+	 * \typedef unsigned long long U64
+	 * \brief Unsigned 64 bit integer
+	 */
+	typedef uint64_t		U64;
+
+	/*!
 	 * \typedef float R32
 	 * \brief 32 bit floating point number
 	 */
@@ -133,8 +142,7 @@ namespace cineon
 		kByte,											//!< 8-bit size component
 		kWord,											//!<
 		kInt,											//!<
-		kFloat,											//!<
-		kDouble											//!<
+		kLongLong										//!< 64-bit integer
 	};
 
 
@@ -1368,6 +1376,16 @@ namespace cineon
 		if (i < 0 || i >= MAX_ELEMENTS)
 			return;
 		this->chan[i].bitDepth = depth;
+	}
+
+	inline Interleave GenericHeader::ImageInterleave() const
+	{
+		return Interleave(this->interleave);
+	}
+
+	inline void GenericHeader::SetImageInterleave(const Interleave inter)
+	{
+		this->interleave = (U8)inter;
 	}
 
 	inline Packing GenericHeader::ImagePacking() const

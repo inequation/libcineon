@@ -80,9 +80,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	cineon::Reader dpx;
-	dpx.SetInStream(&img);
-	if (!dpx.ReadHeader())
+	cineon::Reader cin;
+	cin.SetInStream(&img);
+	if (!cin.ReadHeader())
 	{
 		cout << "Unable to read header" << endl;
 		return 2;
@@ -97,28 +97,28 @@ int main(int argc, char **argv)
 	}
 
 	// data size, override if user specifies
-	cineon::DataSize size = dpx.header.ComponentDataSize(0);
-	int nob = dpx.header.ComponentByteCount(0);
+	cineon::DataSize size = cin.header.ComponentDataSize(0);
+	int nob = cin.header.ComponentByteCount(0);
 	if (write8bit)
 	{
 		size = cineon::kByte;
 		nob = 1;
 	}
 
-	cout << "Image Width " << dpx.header.Width() << " Height " <<
-			dpx.header.Height() << " component byte count " <<
-			dpx.header.ComponentByteCount(0) << endl;
+	cout << "Image Width " << cin.header.Width() << " Height " <<
+			cin.header.Height() << " component byte count " <<
+			cin.header.ComponentByteCount(0) << endl;
 
 	// conversion
 	int format = PHOTOMETRIC_RGB;
 	int elementCount = 3;
-	if (dpx.header.NumberOfElements() == 1) {
+	if (cin.header.NumberOfElements() == 1) {
 		format = PHOTOMETRIC_MINISBLACK;
 		elementCount = 1;
 	}
 
-	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32) dpx.header.Width());
-	TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32) dpx.header.Height());
+	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32) cin.header.Width());
+	TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32) cin.header.Height());
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, (uint32) nob * 8);
 	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, elementCount);
 	TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
@@ -140,14 +140,14 @@ int main(int argc, char **argv)
 		return 4;
 	}
 
-	Block block(0, 0, dpx.header.Width()-1, 0);
+	Block block(0, 0, cin.header.Width()-1, 0);
 	int y;
-	for (y = 0; y < dpx.header.Height(); y++)
+	for (y = 0; y < cin.header.Height(); y++)
 	{
 		block.y1 = y;
 		block.y2 = y;
 
-		/*if (dpx.ReadBlock(buf, size, block, dpx.header.ImageDescriptor(0)) == false)
+		if (cin.ReadBlock(buf, size, block) == false)
 		{
 			cout << "unable to read line " << y << " with component data size " << size << endl;
 			return 5;
@@ -157,8 +157,7 @@ int main(int argc, char **argv)
 		{
 			cout << "unable to write tiff scanline " << y << endl;
 			return 6;
-		}*/
-		assert(!"FIXME");
+		}
 	}
 
 
