@@ -42,9 +42,7 @@
 #define _CINEON_CINEONHEADER_H 1
 
 #include <cstring>
-#if HAVE_STDINT_H
-	#include <stdint.h>
-#endif
+#include <stdint.h>
 
 #include "CineonStream.h"
 
