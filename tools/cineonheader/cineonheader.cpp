@@ -267,7 +267,7 @@ string DisplayPacking(U8 p)
 {
 	string s;
 
-	switch (p)
+	switch (p & ~kPackAsManyAsPossible)
 	{
 	case kPacked:
 		s = "Packed";
@@ -293,6 +293,11 @@ string DisplayPacking(U8 p)
 	default:
 		s = "Unknown " + Display(p);
 	}
+
+	if (p & kPackAsManyAsPossible)
+		s += ", pack as many fields as possible per cell";
+	else
+		s += ", pack at most one pixel per cell";
 
 	return s;
 }

@@ -60,61 +60,6 @@
 namespace cineon
 {
 
-	// this function is called when the DataSize is 10 bit and the packing method is kFilledMethodA or kFilledMethodB
-	template<typename BUF, int PADDINGBITS>
-	void Unfill10bitFilled(U32 *readBuf, const int x, BUF *data, int count, int bufoff, const int numberOfComponents)
-	{
-		// unpack the words in the buffer
-		BUF *obuf = data + bufoff;
-
-		int index = (x * sizeof(U32)) % numberOfComponents;
-
-		for (int i = count - 1; i >= 0; i--)
-		{
-			// unpacking the buffer backwords
-			register U32 word = readBuf[(i + index) / 3 / sizeof(U32)];
-			register U16 d1 = U16(word >> ((2 - (i + index) % 3) * 10 + PADDINGBITS) & 0x3ff) << 6;
-
-			BaseTypeConverter(d1, obuf[i]);
-		}
-#if 0
-		// NOTE: REVERSE -- is this something we really need to handle?
-		// There were many dpx images that write the components backwords
-		// because of some confusion with DPX v1 spec
-
-		switch (dpxHeader.DatumSwap(element))
-		{
-			case 0:			// no swap
-				for (i = count - 1; i >= 0; i--)
-				{
-					U32 word = readBuf[(i + index) / 3 / sizeof(U32)];
-					U16 d1 = U16(word >> (((i + index) % 3) * 10 + PADDINGBITS) & 0x3ff) << 6;
-					BaseTypeConverter(d1, obuf[i]);
-				}
-
-			case 1:			// swap the three datum around so BGR becomes RGB
-				for (i = count - 1; i >= 0; i--)
-				{
-					// unpacking the buffer backwords
-					U32 word = readBuf[(i + index) / 3 / sizeof(U32)];
-					U16 d1 = U16(word >> ((2 - (i + index) % 3) * 10 + PADDINGBITS) & 0x3ff) << 6;
-					BaseTypeConverter(d1, obuf[i]);
-				}
-
-				// NOTE: NOT DONE case 2
-			case 2:			// swap the second two of three datum around so YCrCb becomes YCbCr
-				for (i = count - 1; i >= 0; i--)
-				{
-					// unpacking the buffer backwords
-					U32 word = readBuf[(i + index) / 3 / sizeof(U32)];
-					U16 d1 = U16(word >> ((2 - (count + index) % 3) * 10 + PADDINGBITS) & 0x3ff) << 6;
-					BaseTypeConverter(d1, obuf[i]);
-				}
-
-		}
-#endif
-	}
-
 	template <typename IR, typename BUF, int PADDINGBITS>
 	bool Read10bitFilled(const Header &dpxHeader, U32 *readBuf, IR *fd, const Block &block, BUF *data)
 	{
@@ -154,10 +99,6 @@ namespace cineon
 			fd->Read(dpxHeader, offset, readBuf, readSize);
 
 			// unpack the words in the buffer
-#if RLE_WORKING
-			int count = (block.x2 - block.x1 + 1) * numberOfComponents;
-			Unfill10bitFilled<BUF, PADDINGBITS>(readBuf, block.x1, data, count, bufoff, numberOfComponents);
-#else
 			BUF *obuf = data + bufoff;
 			int index = (block.x1 * sizeof(U32)) % numberOfComponents;
 
@@ -167,12 +108,7 @@ namespace cineon
 				U16 d1 = U16(readBuf[(count + index) / 3] >> ((2 - (count + index) % 3) * 10 + PADDINGBITS) & 0x3ff) << 6;
 
 				BaseTypeConverter(d1, obuf[count]);
-
-				// work-around for 1-channel DPX images - to swap the outlying pixels, otherwise the columns are in the wrong order
-				if (numberOfComponents == 1 && count % 3 == 0)
-					std::swap(obuf[count], obuf[count + 2]);
 			}
-#endif
 		}
 
 		return true;
