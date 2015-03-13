@@ -1,0 +1,1 @@
+Cineon image format reader/writer library written in portable C++. Forked from [OpenDPX](http://dpx.googlecode.com/).
