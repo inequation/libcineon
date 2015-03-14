@@ -1,6 +1,6 @@
 Cineon Image Format reader/writer
 Version 0.1, August 10, 2010
-http://libcineon.googlecode.com/
+https://github.com/inequation/libcineon
 
 Cineon image format reader/writer library written in portable C++, forked
-off of OpenDPX (http://dpx.googlecode.com/).
+off of OpenDPX (https://github.com/inequation/dpx).
